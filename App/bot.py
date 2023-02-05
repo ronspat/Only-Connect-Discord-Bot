@@ -19,7 +19,7 @@ TOKEN = open(".bottoken.txt", "r").read()
 intent = discord.Intents.default()
 intent.message_content = True
 
-client = commands.Bot(command_prefix=".",
+client = commands.Bot(command_prefix="",
                       intents=intent)
 
 #method to load extensions into client
