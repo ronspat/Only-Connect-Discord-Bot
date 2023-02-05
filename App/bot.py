@@ -8,7 +8,7 @@ import logging
 #set up a debug log to basic.log file. Flags messages of level INFO and above
 #Note: The logconfig text file is not currently in use.
 logging.basicConfig(filename="basic.log", filemode="w",
-                    level=logging.INFO, encoding="utf-8",
+                    level=logging.DEBUG, encoding="utf-8",
                     format='%(levelname)-10s:%(name)-10s:%(message)s')
 
 
