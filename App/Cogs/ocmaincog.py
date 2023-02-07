@@ -1,4 +1,5 @@
 import Questions.questions
+import asyncio
 from discord.ext import commands
 
 
@@ -9,7 +10,22 @@ class OCmaincog(commands.Cog):
         self.client.games = {}
         self.client.questionsinplay = {}
         self.client.commandedkeys = {}
-# the client is a Bot object class
+        self.client.timertasks = {}
+        self.client.istimeron = {}
+# the client is a Bot object class. I am not sure why it allows you to add new variables to the bot object but it does.
+#each element added to the client bot is a dict with the key as a channel id and the value as the specific thing,
+#so that the bot can be played concurrently in multiple channels or servers (channel ids are unique globally)
+
+    #timer method
+    async def counttime(self, channelid, timelimit, ctx: commands.Context):
+        await asyncio.sleep(timelimit)
+        self.client.istimeron[channelid] = False
+        print("Task finished")
+        await ctx.send('Sorry you ran out of time!')
+        #The timer is started by using it to construct an Asyncio task object
+        #with the create task method in asyncio.
+        # a specific task.cancel() method is used in methods where the timer is stopped early.
+        # If the timer is not stopped early, the code here will continue running beyond the asyncio sleep method
 
     #question methods
 
@@ -34,20 +50,27 @@ class OCmaincog(commands.Cog):
                     and self.client.questionsinplay[ctx.channel.id].cluesgiven == 0:
                 await ctx.send('First Clue')
                 self.client.questionsinplay[ctx.channel.id].cluesgiven = 1
-                #await timer = None
+
+                #start timer
+                r1timertask = asyncio.create_task(self.counttime(channelid=ctx.channel.id,timelimit=5, ctx=ctx)) # start the clock
+                self.client.timertasks[ctx.channel.id] = r1timertask # add timer to bot's timer dict for reference in other methods
+                self.client.istimeron[ctx.channel.id] = True # state in the bot's boolean dict that the timer is on
             elif self.client.commandedkeys[ctx.channel.id] == "n"\
                     and self.client.questionsinplay[ctx.channel.id].stage == "started"\
-                    and self.client.questionsinplay[ctx.channel.id].cluesgiven == 1:
+                    and self.client.questionsinplay[ctx.channel.id].cluesgiven == 1\
+                    and self.client.istimeron[ctx.channel.id] is True:
                 await ctx.send('2nd Clue')
                 self.client.questionsinplay[ctx.channel.id].cluesgiven = 2
             elif self.client.commandedkeys[ctx.channel.id] == "n"\
                     and self.client.questionsinplay[ctx.channel.id].stage == "started"\
-                    and self.client.questionsinplay[ctx.channel.id].cluesgiven == 2:
+                    and self.client.questionsinplay[ctx.channel.id].cluesgiven == 2\
+                    and self.client.istimeron[ctx.channel.id] is True:
                 await ctx.send('3rd Clue')
                 self.client.questionsinplay[ctx.channel.id].cluesgiven = 3
             elif self.client.commandedkeys[ctx.channel.id] == "n"\
                     and self.client.questionsinplay[ctx.channel.id].stage == "started"\
-                    and self.client.questionsinplay[ctx.channel.id].cluesgiven == 3:
+                    and self.client.questionsinplay[ctx.channel.id].cluesgiven == 3\
+                    and self.client.istimeron[ctx.channel.id] is True:
                 await ctx.send('4th Clue')
                 self.client.questionsinplay[ctx.channel.id].cluesgiven = 4
 
@@ -72,6 +95,30 @@ class OCmaincog(commands.Cog):
             self.client.commandedkeys[ctx.channel.id] = "1"
             info = await self.round1question(ctx=ctx)
 
+    @commands.command(name="n")
+    async def nextclue(self, ctx):
+        if self.client.games[ctx.channel.id] == "p1": #or if an actual game
+            self.client.commandedkeys[ctx.channel.id] = "n"
+            info = await self.round1question(ctx=ctx)
+        elif self.client.games[ctx.channel.id] == "p2":
+            pass
+
+    @commands.Cog.listener()
+    #checks for the right answer to a question in a message
+    async def on_message(self, message): #make sure to include message in the argument, since it's a parameter of the on_message method
+        if message.author == self.client.user:
+            return
+        elif message.content.startswith('nehek'):
+            self.client.timertasks[message.channel.id].cancel()
+            self.client.istimeron = False
+            print("stopped the timer")
+            await message.channel.send(content=self.client.games.get(message.channel.id)) #use dict method to return none if value not present
+
+        # if self.client.games[ctx.channel.id] == "p1":  # or if an actual game
+        #     self.client.commandedkeys[ctx.channel.id] = "n"
+        #     info = await self.round1question(ctx=ctx)
+        # elif self.client.games[ctx.channel.id] == "p2":
+        #     pass
 
 
     #events

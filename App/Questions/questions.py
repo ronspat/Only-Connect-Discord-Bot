@@ -1,6 +1,11 @@
 import random
-
+import asyncio
 import requests
+import logging
+
+#logging.basicConfig(filename="basic.log", filemode="w",
+#                    level=logging.DEBUG, encoding="utf-8",
+#                    format='%(levelname)-10s:%(name)-10s:%(message)s')
 
 class Question:
 
@@ -10,17 +15,20 @@ class Question:
         self.cluesgiven = 0
 
 
-#     def __init__(self):
-#         self.type = None
-#         self.id = None
+
+# async def mmmain():
+#     mytimer = Timer(timelimit=5)
+#     task = asyncio.create_task(Timer.counttime(mytimer))
+#     await asyncio.sleep(4)
+#     task.cancel()
+#     try:
+#         await task
+#     except:
+#         print("Task stopped: can't print")
 #
-#     def questiontime(self):
-#         if self.type == 1 or self.type == 2:
-#             return 40
-#         elif self.type == 3:
-#             return 150
-#         else:
-#             return None
+# asyncio.run(mmmain())
+
+
 
 def getquestionlist(url: str):
     jsonresponseasdict = requests.get(url).json()
@@ -38,4 +46,4 @@ def getquestion(questionlist: list, number=None):
         return None
 
 
-getquestionlist("https://onlyconnect.s3.eu-west-2.amazonaws.com/Questions/r1.txt")
+#getquestionlist("https://onlyconnect.s3.eu-west-2.amazonaws.com/Questions/r1.txt")
