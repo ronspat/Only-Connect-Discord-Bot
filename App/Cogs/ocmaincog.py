@@ -26,11 +26,12 @@ class OCmaincog(commands.Cog):
         #with the create task method in asyncio.
         # a specific task.cancel() method is used in methods where the timer is stopped early.
         # If the timer is not stopped early, the code here will continue running beyond the asyncio sleep method
-
+        if self.client.games[ctx.channel.id] in {"p1", "p2"}:
+            await ctx.channel.send("Thanks for playing! Type playoc to try another question.")
+            self.client.games[ctx.channel.id] = "s"
     #question methods
 
     async def round1question(self, ctx: commands.Context, question: Questions.questions.Question = None, questionid: str = None):
-        print(ctx.channel.id)
 
         if self.client.games[ctx.channel.id] == "p1" or self.client.games[ctx.channel.id] == "g1":
 
@@ -42,13 +43,14 @@ class OCmaincog(commands.Cog):
                 self.client.questionsinplay[ctx.channel.id] = Questions.questions.Question(questioninfo=questioninfodict)
                 self.client.questionsinplay[ctx.channel.id].stage = "started"
 
-                await ctx.send('I want to know what is the connection between these clues. '
+                await ctx.send('What is the connection between these clues. '
                       'Press n to get your first clue and start the timer (40 seconds), and n again for every additional clue.'
                       'Type out your answer whenever you think you know the connection.')
             elif self.client.commandedkeys[ctx.channel.id] == "n" \
                     and self.client.questionsinplay[ctx.channel.id].stage == "started" \
                     and self.client.questionsinplay[ctx.channel.id].cluesgiven == 0:
-                await ctx.send('First Clue')
+                await ctx.send('1st Clue')
+                #print(self.client.questionsinplay[ctx.channel.id].questioninfodict["clues"][1])
                 self.client.questionsinplay[ctx.channel.id].cluesgiven = 1
 
                 #start timer
@@ -108,11 +110,36 @@ class OCmaincog(commands.Cog):
     async def on_message(self, message): #make sure to include message in the argument, since it's a parameter of the on_message method
         if message.author == self.client.user:
             return
-        elif message.content.startswith('nehek'):
+        #returning a correct answer in round 1 or 2
+        elif message.content.startswith('nehek') and self.client.games[message.channel.id] in {"p1", "p2"}\
+                and self.client.commandedkeys[message.channel.id] == "n":
             self.client.timertasks[message.channel.id].cancel()
             self.client.istimeron = False
             print("stopped the timer")
-            await message.channel.send(content=self.client.games.get(message.channel.id)) #use dict method to return none if value not present
+            #await message.channel.send(content=self.client.games.get(message.channel.id)) #use dict method to return none if value not present. explicitly specifying content just in case error might show up
+
+            if self.client.questionsinplay[message.channel.id].cluesgiven == 1:
+                await message.channel.send("Correct with only 1 clue: that's 5 points!")
+            elif self.client.questionsinplay[message.channel.id].cluesgiven == 2:
+                await message.channel.send("Correct with only 2 clues: that's 3 points!")
+            elif self.client.questionsinplay[message.channel.id].cluesgiven == 3:
+                await message.channel.send("Correct with only 3 clues: that's 2 points!")
+            elif self.client.questionsinplay[message.channel.id].cluesgiven == 4:
+                await message.channel.send("Correct with 4 clues: that's 1 point!")
+
+            if self.client.games[message.channel.id] in {"p1", "p2"}:
+                await message.channel.send("Thanks for playing! Type playoc to try another question.")
+                self.client.games[message.channel.id] = "s"
+
+        # returning an incorrect answer in round 1 or 2
+        elif message.content != 'nehek' and message.content != "n"\
+                and (self.client.games[message.channel.id] in {"p1", "p2"})\
+                and self.client.commandedkeys[message.channel.id] == "n":
+            await message.channel.send("Not the right answer I'm afraid.")
+
+            if self.client.games[message.channel.id] in {"p1", "p2"}:
+                await message.channel.send("Thanks for playing! Type playoc to try another question.")
+                self.client.games[message.channel.id] = "s"
 
         # if self.client.games[ctx.channel.id] == "p1":  # or if an actual game
         #     self.client.commandedkeys[ctx.channel.id] = "n"

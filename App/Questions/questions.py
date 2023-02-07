@@ -1,5 +1,4 @@
 import random
-import asyncio
 import requests
 import logging
 
@@ -13,20 +12,6 @@ class Question:
         self.questioninfo = questioninfo
         self.stage = "not started"
         self.cluesgiven = 0
-
-
-
-# async def mmmain():
-#     mytimer = Timer(timelimit=5)
-#     task = asyncio.create_task(Timer.counttime(mytimer))
-#     await asyncio.sleep(4)
-#     task.cancel()
-#     try:
-#         await task
-#     except:
-#         print("Task stopped: can't print")
-#
-# asyncio.run(mmmain())
 
 
 
