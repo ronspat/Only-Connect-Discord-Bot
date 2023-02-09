@@ -200,17 +200,13 @@ class OCmaincog(commands.Cog):
         elif any(x in message.content.lower() for x in self.client.questionsinplay[message.channel.id].questioninfo["answerlist"]) \
                 and self.client.games[message.channel.id] in {"p1", "p2"} \
                 and self.client.commandedkeys[message.channel.id] == "n":
-            #message.content.startswith('nehek') \
             self.client.timertasks[message.channel.id].cancel()
             self.client.istimeron = False
             print("stopped the timer")
             # use dict method to return none if value not present. explicitly specifying content just in case error might show up
-
             if self.client.questionsinplay[message.channel.id].questioninfo["novelty"] == "audio":
                 message.guild.voice_client.stop()
                 await message.guild.voice_client.disconnect()
-
-
             if self.client.questionsinplay[message.channel.id].cluesgiven == 1:
                 await message.channel.send("Correct with only 1 clue: that's 5 points!")
             elif self.client.questionsinplay[message.channel.id].cluesgiven == 2:
@@ -219,7 +215,6 @@ class OCmaincog(commands.Cog):
                 await message.channel.send("Correct with only 3 clues: that's 2 points!")
             elif self.client.questionsinplay[message.channel.id].cluesgiven == 4:
                 await message.channel.send("Correct with 4 clues: that's 1 point!")
-
             await message.channel.send(self.client.questionsinplay[message.channel.id].questioninfo["response"])
 
             if self.client.games[message.channel.id] in {"p1", "p2"}:
