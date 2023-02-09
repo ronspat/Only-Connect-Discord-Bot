@@ -24,11 +24,13 @@ def getquestionlist(url: str):
 def getquestion(questionlist: list, number=None):
     if number is None:
         number = random.randint(0, len(questionlist) - 1)
-    elif 0 <= number < (len(questionlist) - 1):
-        return questionlist[int]
+        return questionlist[number]
+    elif 1 <= number <= (len(questionlist)):
+        return questionlist[number - 1]
     else:
         print("No question found")
-        return None
+        return
 
 
-#getquestionlist("https://onlyconnect.s3.eu-west-2.amazonaws.com/Questions/r1.txt")
+#questionlist = getquestionlist("https://onlyconnect.s3.eu-west-2.amazonaws.com/Questions/r1.txt")
+
