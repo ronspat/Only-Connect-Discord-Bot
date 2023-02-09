@@ -234,10 +234,10 @@ class OCmaincog(commands.Cog):
             self.client.timertasks[message.channel.id].cancel()
             self.client.istimeron = False
             print("stopped the timer")
-            await message.channel.send("Not the right answer I'm afraid.")
             if self.client.questionsinplay[message.channel.id].questioninfo["novelty"] == "audio":
                 message.guild.voice_client.stop()
                 await message.guild.voice_client.disconnect()
+            await message.channel.send("Not the right answer I'm afraid.")
             await message.channel.send(self.client.questionsinplay[message.channel.id].questioninfo["response"])
             if self.client.games[message.channel.id] in {"p1", "p2"}:
                 await message.channel.send("Thanks for playing! Type playoc to try another question.")
