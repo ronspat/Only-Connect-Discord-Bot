@@ -25,7 +25,9 @@ client = commands.Bot(command_prefix="",
 #method to load extensions into client
 async def loadall(bot: commands.Bot):
     for filename in os.listdir('./Cogs'):
-        if filename.endswith('.py'):
+        if "__init__" in filename:
+            pass
+        elif filename.endswith('.py'):
                 print({filename[:-3]})
                 await client.load_extension(f'Cogs.{filename[:-3]}')
                 print(f'cogs.{filename[:-3]} loaded')
