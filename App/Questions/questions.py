@@ -10,8 +10,20 @@ class Question:
 
     def __init__(self, questioninfo: dict):
         self.questioninfo = questioninfo
+
+        #round1or2variables
         self.stage = "not started"
         self.cluesgiven = 0
+
+        #round 3 variables
+        self.wallpoints = 0
+        self.groupsfound = {"group 1": False, "group 2": False, "group 3": False, "group 4": False}
+        self.round3lives = 3
+
+        #round4variables
+        self.categoryno = -1
+        self.missingvowelno = -1
+        self.round4points = 0
 
 
 
@@ -32,5 +44,8 @@ def getquestion(questionlist: list, number=None):
         return
 
 
-#questionlist = getquestionlist("https://onlyconnect.s3.eu-west-2.amazonaws.com/Questions/r1.txt")
+questionlist = getquestionlist("https://onlyconnect.s3.eu-west-2.amazonaws.com/Questions/r3.txt")
+q = getquestion(questionlist)
+print(q["group 1"]["items"])
+print(type(q["group 1"]["items"]))
 

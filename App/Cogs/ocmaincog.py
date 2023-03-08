@@ -1,3 +1,5 @@
+import operator
+
 import Questions.questions
 import discord
 from discord.ext import commands
@@ -25,7 +27,7 @@ class OCmaincog(commands.Cog):
     async def playoc(self, ctx):
         await ctx.send(f'Hi! Welcome to Only Connect. '
                        f'Type p for a practice round, or g '
-                       f'for a full game.')
+                       f'for a full game. (full game mode not yet available)')
         self.client.games[ctx.channel.id] = "s"
 
     @commands.command()
@@ -50,11 +52,41 @@ class OCmaincog(commands.Cog):
             self.client.commandedkeys[ctx.channel.id] = "2"
             await OCresponses.ocresponses.readoutquestion(client=self.client, ctx=ctx, roundno = "2")
 
+    @commands.command(name="3")
+    async def r3start(self, ctx):
+        self.client.commandedkeys[ctx.channel.id] = "3"
+        self.client.games[ctx.channel.id] = "p3a"
+        await OCresponses.ocresponses.readoutquestion(client=self.client, ctx=ctx, roundno="3")
+
+    @commands.command(name="4")
+    async def r4start(self, ctx):
+        self.client.commandedkeys[ctx.channel.id] = "4"
+        self.client.games[ctx.channel.id] = "p4"
+        await OCresponses.ocresponses.readoutquestion(client=self.client, ctx=ctx, roundno="4")
+
     @commands.command(name="n")
     async def nextclue(self, ctx):
-        if self.client.games[ctx.channel.id] in ("p1", "p2"):  # or if an actual game
+        if self.client.games[ctx.channel.id] in {"p1", "p2"}:  # or if an actual game
             self.client.commandedkeys[ctx.channel.id] = "n"
             info = await OCresponses.ocresponses.round1or2question(client=self.client, ctx=ctx)
+        elif self.client.games[ctx.channel.id] in ("p3a"):
+            self.client.commandedkeys[ctx.channel.id] = "n"
+            await ctx.send(self.client.questionsinplay[ctx.channel.id].questioninfo["wallimages"][0])
+            self.client.commandedkeys[ctx.channel.id] = "nulla"
+            r3atimertask = asyncio.create_task(
+                OCresponses.ocresponses.counttimefrommsg(client=self.client, channelid=ctx.channel.id, timelimit=60,
+                                                         message=ctx.message))  # start the clock
+            # note: when creating a timer task you don't await the method of the task inside
+            # the create task method. if you do this will lead to a type error where asyncio expects a coroutine instead
+            # of None
+            self.client.timertasks[
+                ctx.channel.id] = r3atimertask  # add timer to bot's timer dict for reference in other methods
+            self.client.istimeron[ctx.channel.id] = True  # state in the bot's boolean dict that the timer is on
+
+        elif self.client.games[ctx.channel.id] in ("p4") and (self.client.commandedkeys[ctx.channel.id] != "n" and self.client.commandedkeys[ctx.channel.id] != "nulla"):
+            self.client.commandedkeys[ctx.channel.id] = "n"
+            await OCresponses.ocresponses.round4question(client=self.client, message=ctx.message)
+
 
 
     @commands.Cog.listener()
@@ -63,58 +95,29 @@ class OCmaincog(commands.Cog):
                          message):  # make sure to include message in the argument, since it's a parameter of the on_message method
         if message.author == self.client.user:
             return
-
         # returning a correct answer in round 1 or 2
-        elif any(x in message.content.lower() for x in
-                 self.client.questionsinplay[message.channel.id].questioninfo["answerlist"]) \
-                and self.client.games[message.channel.id] in {"p1", "p2"} \
-                and self.client.commandedkeys[message.channel.id] == "n":
-            self.client.timertasks[message.channel.id].cancel()
-            self.client.istimeron[message.channel.id] = False
-            print("stopped the timer")
-            # use dict method to return none if value not present. explicitly specifying content just in case error might show up
-            if self.client.questionsinplay[message.channel.id].questioninfo["novelty"] == "audio":
-                message.guild.voice_client.stop()
-                await message.guild.voice_client.disconnect()
-            if self.client.questionsinplay[message.channel.id].cluesgiven == 1:
-                await message.channel.send("Correct with only 1 clue: that's 5 points!")
-            elif self.client.questionsinplay[message.channel.id].cluesgiven == 2:
-                await message.channel.send("Correct with only 2 clues: that's 3 points!")
-            elif self.client.questionsinplay[message.channel.id].cluesgiven == 3:
-                await message.channel.send("Correct with only 3 clues: that's 2 points!")
-            elif self.client.questionsinplay[message.channel.id].cluesgiven == 4:
-                await message.channel.send("Correct with 4 clues: that's 1 point!")
-            await message.channel.send(self.client.questionsinplay[message.channel.id].questioninfo["response"])
+        elif self.client.games[message.channel.id] in {"p1", "p2"}:
+            await OCresponses.ocresponses.round1or2response(client=self.client, message=message)
 
-            if self.client.games[message.channel.id] in {"p1", "p2"}:
-                await message.channel.send("Thanks for playing! Type playoc to try another question.")
-                self.client.games[message.channel.id] = "s"
+        #finding connections on a wall
+        elif self.client.games[message.channel.id] in {"p3a"}:
+            await OCresponses.ocresponses.round3aresponse(client=self.client, message=message)
 
-        # returning an incorrect answer in round 1 or 2
-        elif any(x in message.content.lower() for x in
-                 self.client.questionsinplay[message.channel.id].questioninfo["answerlist"]) is False \
-                and message.content != "n" \
-                and (self.client.games[message.channel.id] in {"p1", "p2"}) \
-                and self.client.commandedkeys[message.channel.id] == "n":
-            self.client.timertasks[message.channel.id].cancel()
-            self.client.istimeron[message.channel.id] = False
-            print("stopped the timer")
-            if self.client.questionsinplay[message.channel.id].questioninfo["novelty"] == "audio":
-                message.guild.voice_client.stop()
-                await message.guild.voice_client.disconnect()
-            await message.channel.send("Not the right answer I'm afraid.")
-            await message.channel.send(self.client.questionsinplay[message.channel.id].questioninfo["response"])
-            if self.client.games[message.channel.id] in {"p1", "p2"}:
-                await message.channel.send("Thanks for playing! Type playoc to try another question.")
-                self.client.games[message.channel.id] = "s"
+        #guessing connections of wall groups
+        elif self.client.games[message.channel.id] in {"p3b1"}:
+            await OCresponses.ocresponses.round3banswercheck(client=self.client, message=message, currentsubround=1)
+        elif self.client.games[message.channel.id] in {"p3b2"}:
+            await OCresponses.ocresponses.round3banswercheck(client=self.client, message=message, currentsubround=2)
+        elif self.client.games[message.channel.id] in {"p3b3"}:
+            await OCresponses.ocresponses.round3banswercheck(client=self.client, message=message, currentsubround=3)
+        elif self.client.games[message.channel.id] in {"p3b4"}:
+            await OCresponses.ocresponses.round3banswercheck(client=self.client, message=message, currentsubround=4)
 
-        # if self.client.games[ctx.channel.id] == "p1":  # or if an actual game
-        #     self.client.commandedkeys[ctx.channel.id] = "n"
-        #     info = await self.round1question(ctx=ctx)
-        # elif self.client.games[ctx.channel.id] == "p2":
-        #     pass
+        #guessing missing vowels
+        elif self.client.games[message.channel.id] in {"p4"} and len(message.content) > 1 and self.client.commandedkeys[message.channel.id] == "nulla":
+            await OCresponses.ocresponses.round4answercheck(client=self.client, message=message)
 
-    # events
+            # events
     @commands.Cog.listener()
     async def on_ready(self):
         print(f'{self.client.user} has connected to Discord!')
