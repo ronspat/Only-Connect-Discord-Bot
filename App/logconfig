@@ -1,0 +1,23 @@
+config = {
+    'version':1,
+    "disable_existing_loggers": False,
+    'formatters':{
+        'standard': {
+        "format": '%(levelname)-10s:%(name)-10s:%(message)s'
+        }
+    }
+    'handlers': {
+        'default':{
+            'level': "Debug",
+            "formatter": "standard",
+            "class": "Logging.FileHandler",
+            'filename': "basic.log"
+            'mode': "w"
+        }
+    }
+    'loggers': {
+        'level': "Debug",
+        'handlers': ['default']
+        'propagate': True
+    }
+}
