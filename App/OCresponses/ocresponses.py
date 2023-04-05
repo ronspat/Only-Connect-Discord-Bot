@@ -1,3 +1,6 @@
+#This script contains the bulk of the responses performed by the bot e.g. asking and responding to questions, setting timers. These methods
+# are utilised in the bot's cog. Additionally they use the questions script to get questions from the S3 bucket.
+
 import asyncio
 import operator
 
@@ -46,8 +49,6 @@ async def round3btimer(client: commands.Bot, message: discord.Message, startercl
     await message.channel.send(
         "You got " + str(client.questionsinplay[message.channel.id].wallpoints) + " points in total.")
     await message.channel.send("That's the end of the round. Thanks for playing! Type playoc to try another question.")
-
-
 
 async def counttimefrommsg(client: commands.Bot, channelid, timelimit, message: discord.Message):
     #used for round 3a or 4 timers
@@ -434,6 +435,7 @@ async def round4answercheck(client: commands.Bot, message: discord.Message):
          client.questionsinplay[message.channel.id].missingvowelno == len(
         client.questionsinplay[message.channel.id].questioninfo \
             ["categories"][client.questionsinplay[message.channel.id].categoryno - 1]["missingvowels"]):
+        # If the current question is the last question of the last category
         client.timertasks[message.channel.id].cancel()
         client.istimeron[message.channel.id] = False
         client.games[message.channel.id] = "s"
