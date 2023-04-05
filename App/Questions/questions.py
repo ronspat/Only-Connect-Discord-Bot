@@ -1,10 +1,7 @@
+#A class for questions and methods required to get question info
+
 import random
 import requests
-import logging
-
-#logging.basicConfig(filename="basic.log", filemode="w",
-#                    level=logging.DEBUG, encoding="utf-8",
-#                    format='%(levelname)-10s:%(name)-10s:%(message)s')
 
 class Question:
 
@@ -29,7 +26,6 @@ class Question:
 
 def getquestionlist(url: str):
     jsonresponseasdict = requests.get(url).json()
-    #print(jsonresponseasdict.get("questions"))
     return jsonresponseasdict.get("questions")  # returns questions as list. each question is a dict
 
 
@@ -44,8 +40,4 @@ def getquestion(questionlist: list, number=None):
         return
 
 
-questionlist = getquestionlist("https://onlyconnect.s3.eu-west-2.amazonaws.com/Questions/r3.txt")
-q = getquestion(questionlist)
-print(q["group 1"]["items"])
-print(type(q["group 1"]["items"]))
 

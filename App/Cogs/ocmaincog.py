@@ -1,12 +1,10 @@
-import operator
-
-import Questions.questions
-import discord
+#This Script contains the async methods representing responses from the bot server when an individual types into the chat.
+#These methods typically call the ocrepsonses methods which detail the actual bot responses and actions
+#The async methods are compiled into a Cog subclass so they can be added to the Discord bot object.
 from discord.ext import commands
 import OCresponses.ocresponses
 # for creating a timer
 import asyncio
-
 
 class OCmaincog(commands.Cog):
 
@@ -19,7 +17,7 @@ class OCmaincog(commands.Cog):
         self.client.istimeron = {}
         self.client.musictasks = {}
 
-    # the client is a Bot object class. I am not sure why it allows you to add new variables to the bot object but it does.
+    # the client is a Bot/Cog object class. Can add new variables to the cog subclass.
     # each element added to the client bot is a dict with the key as a channel id and the value as the specific thing,
     # so that the bot can be played concurrently in multiple channels or servers (channel ids are unique globally)
 
@@ -117,7 +115,7 @@ class OCmaincog(commands.Cog):
         elif self.client.games[message.channel.id] in {"p4"} and len(message.content) > 1 and self.client.commandedkeys[message.channel.id] == "nulla":
             await OCresponses.ocresponses.round4answercheck(client=self.client, message=message)
 
-            # events
+            # log on test event
     @commands.Cog.listener()
     async def on_ready(self):
         print(f'{self.client.user} has connected to Discord!')
